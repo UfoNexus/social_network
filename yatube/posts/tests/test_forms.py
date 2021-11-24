@@ -33,10 +33,10 @@ class PostFormTests(TestCase):
             data=form_data,
             follow=True
         )
-        self.assertRedirects(response, reverse(
-            'posts:profile', kwargs={'username': 'TestUser'}
-            )
-        )
+        self.assertRedirects(response,
+                             reverse('posts:profile',
+                                     kwargs={'username': 'TestUser'})
+                             )
         self.assertEqual(Post.objects.count(), posts_count + 1)
         self.assertTrue(
             Post.objects.filter(
@@ -53,8 +53,8 @@ class PostFormTests(TestCase):
             data=form_data,
             follow=True
         )
-        self.assertRedirects(response, reverse(
-            'posts:post_detail', kwargs={'post_id': 1}
-            )
-        )
+        self.assertRedirects(response,
+                             reverse('posts:post_detail',
+                                     kwargs={'post_id': 1})
+                             )
         self.assertEqual(Post.objects.get(pk=1).text, 'Новый текст для поста')
