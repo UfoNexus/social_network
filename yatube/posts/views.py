@@ -9,7 +9,7 @@ from yatube.settings import POST_PAGINATOR
 
 
 def index(request):
-    posts = Post.objects.order_by('pk')
+    posts = Post.objects.all()
     paginator = Paginator(posts, POST_PAGINATOR)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)

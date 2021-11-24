@@ -1,3 +1,5 @@
+from time import sleep
+
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -29,6 +31,7 @@ class TaskPagesTests(TestCase):
                 author=cls.user,
                 group=cls.new_group
             )
+            sleep(0.05)
         cls.templates_pages = {
             reverse('posts:index'): 'posts/index.html',
             reverse('posts:group_list',
@@ -60,7 +63,7 @@ class TaskPagesTests(TestCase):
         post_text_0 = first_object.text
         post_author_0 = first_object.author.username
         post_group_0 = first_object.group.title
-        self.assertEqual(post_text_0, 'Тестовый пост 0')
+        self.assertEqual(post_text_0, 'Тестовый пост 13')
         self.assertEqual(post_author_0, 'TestUser')
         self.assertEqual(post_group_0, 'Тестовая группа')
         self.assertEqual(len(response.context['page_obj']), 10)
@@ -80,7 +83,7 @@ class TaskPagesTests(TestCase):
         post_text_0 = first_object.text
         post_author_0 = first_object.author.username
         post_group_0 = first_object.group.title
-        self.assertEqual(post_text_0, 'Тестовый пост 0')
+        self.assertEqual(post_text_0, 'Тестовый пост 13')
         self.assertEqual(post_author_0, 'TestUser')
         self.assertEqual(post_group_0, 'Тестовая группа')
         self.assertEqual(len(response.context['page_obj']), 10)
@@ -98,7 +101,7 @@ class TaskPagesTests(TestCase):
         post_text_0 = first_object.text
         post_author_0 = first_object.author.username
         post_group_0 = first_object.group.title
-        self.assertEqual(post_text_0, 'Тестовый пост 0')
+        self.assertEqual(post_text_0, 'Тестовый пост 13')
         self.assertEqual(post_author_0, 'TestUser')
         self.assertEqual(post_group_0, 'Тестовая группа')
         self.assertEqual(len(response.context['page_obj']), 10)
