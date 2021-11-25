@@ -48,13 +48,11 @@ class PostFormTests(TestCase):
                                      kwargs={'username': self.user.username})
                              )
         posts_amount = Post.objects.count()
-        new_post = Post.objects.get(pk=posts_amount)
+        new_post = list(Post.objects.order_by('-pk'))[0]
         self.assertEqual(posts_amount, posts_count + 1)
-        self.assertTrue(
-            Post.objects.filter(
-                pk=new_post.pk
-            ).exists()
-        )
+        self.assertTrue(Post.objects.filter(pk=new_post.pk).exists())
+        self.assertEqual(new_post.text, form_data['text'])
+        self.assertEqual(new_post.group.pk, form_data['group'])
 
     def test_edit_post_auth(self):
         required_group = self.new_groups[list(self.new_groups.keys())[1]]
@@ -71,10 +69,9 @@ class PostFormTests(TestCase):
                              reverse('posts:post_detail',
                                      kwargs={'post_id': self.new_post.pk})
                              )
-        self.assertEqual(Post.objects.get(pk=self.new_post.pk).text,
-                         form_data[list(form_data.keys())[0]])
-        self.assertEqual(Post.objects.get(pk=self.new_post.pk).group.pk,
-                         form_data[list(form_data.keys())[1]])
+        edited_post = Post.objects.get(pk=self.new_post.pk)
+        self.assertEqual(edited_post.text, form_data['text'])
+        self.assertEqual(edited_post.group.pk, form_data['group'])
 
     def test_create_post_guest(self):
         posts_count = Post.objects.count()
@@ -111,9 +108,6 @@ class PostFormTests(TestCase):
             reverse("posts:post_edit", kwargs={"post_id": self.new_post.pk})
         ))
         self.assertNotEqual(Post.objects.get(pk=self.new_post.pk).text,
-                            form_data[list(form_data.keys())[0]])
-        try:
-            self.assertNotEqual(Post.objects.get(pk=self.new_post.pk).group.pk,
-                                form_data[list(form_data.keys())[1]])
-        except AttributeError:
-            self.assertIsNone(Post.objects.get(pk=self.new_post.pk).group)
+                            form_data['text'])
+        self.assertNotEqual(Post.objects.get(pk=self.new_post.pk).group,
+                            required_group)
