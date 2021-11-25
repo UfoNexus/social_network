@@ -164,7 +164,8 @@ class TaskPagesTests(TestCase):
         self.assertTrue(new_post in objects)
 
         response = self.authorized_client.get(
-            reverse('posts:group_list', kwargs={'slug': self.one_post_group.slug})
+            reverse('posts:group_list',
+                    kwargs={'slug': self.one_post_group.slug})
         )
         objects = response.context['page_obj']
         self.assertTrue(new_post in objects)

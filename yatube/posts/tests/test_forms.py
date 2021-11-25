@@ -108,7 +108,7 @@ class PostFormTests(TestCase):
         )
         self.assertRedirects(response, '{}?next={}'.format(
             reverse("users:login"),
-            reverse("posts:post_edit",kwargs={"post_id": self.new_post.pk})
+            reverse("posts:post_edit", kwargs={"post_id": self.new_post.pk})
         ))
         self.assertNotEqual(Post.objects.get(pk=self.new_post.pk).text,
                             form_data[list(form_data.keys())[0]])
