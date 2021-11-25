@@ -107,6 +107,6 @@ class PostFormTests(TestCase):
             reverse("users:login"),
             reverse("posts:post_edit", kwargs={"post_id": self.new_post.pk})
         ))
-        edited_post = Post.objects.get(pk=self.new_post.p)
+        edited_post = Post.objects.get(pk=self.new_post.pk)
         self.assertNotEqual(edited_post.text, form_data['text'])
         self.assertNotEqual(edited_post.group, required_group)
