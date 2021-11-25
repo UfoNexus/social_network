@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
+from http import HTTPStatus
 
 from ..models import Group, Post
 
@@ -16,7 +17,7 @@ class TaskURLTests(TestCase):
             description='Тестовое описание группы'
         )
         cls.user = User.objects.create_user(username='TestUser')
-        Post.objects.create(
+        cls.new_post = Post.objects.create(
             text='Тестовый пост',
             author=cls.user,
             group=cls.new_group
@@ -27,22 +28,21 @@ class TaskURLTests(TestCase):
             author=cls.user_for_post
         )
         cls.templates_urls = {
-            ('/', 'no_auth'): ('posts/index.html',
-                               None),
-            ('/group/test_group/', 'no_auth'): ('posts/group_list.html',
-                                                None),
-            ('/profile/TestUser/', 'no_auth'): ('posts/profile.html',
-                                                None),
-            ('/posts/1/', 'no_auth'): ('posts/post_detail.html',
-                                       None),
-            ('/posts/{}/edit/', 'auth'): ('posts/create_post.html',
-                                          '/auth/login/'),
-            ('/create/', 'auth'): ('posts/create_post.html',
-                                   '/auth/login/')
+            ('/', 'no_auth'):
+                ('posts/index.html', None),
+            (f'/group/{cls.new_group.slug}/', 'no_auth'):
+                ('posts/group_list.html', None),
+            (f'/profile/{cls.user.username}/', 'no_auth'):
+                ('posts/profile.html', None),
+            (f'/posts/{cls.new_post.pk}/', 'no_auth'):
+                ('posts/post_detail.html', None),
+            ('/posts/{}/edit/', 'auth'):
+                ('posts/create_post.html', '/auth/login/'),
+            ('/create/', 'auth'):
+                ('posts/create_post.html', '/auth/login/')
         }
 
     def setUp(self):
-        self.guest_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
 
@@ -50,14 +50,17 @@ class TaskURLTests(TestCase):
         for url, condition in self.templates_urls.keys():
             if condition == 'no_auth':
                 with self.subTest(adress=url):
-                    response = self.guest_client.get(url)
-                    self.assertEqual(response.status_code, 200)
+                    response = self.client.get(url)
+                    self.assertEqual(response.status_code, HTTPStatus.OK.value)
             if condition == 'auth':
                 with self.subTest(adress=url):
-                    response = self.guest_client.get(url.format('1'))
+                    response = self.client.get(
+                        url.format(self.new_post.pk)
+                    )
                     redirect = self.templates_urls[url, condition][1]
                     self.assertRedirects(response,
-                                         f'{redirect}?next={url.format("1")}')
+                                         f'{redirect}?next='
+                                         f'{url.format(self.new_post.pk)}')
 
     def test_urls_for_auth(self):
         for url, condition in self.templates_urls.keys():
@@ -70,22 +73,24 @@ class TaskURLTests(TestCase):
                                 url.format(index)
                             )
                             if self.user.username == post.author.username:
-                                self.assertEqual(response.status_code, 200)
+                                self.assertEqual(response.status_code,
+                                                 HTTPStatus.OK.value)
                             else:
                                 self.assertRedirects(
                                     response, f'/posts/{index}/'
                                 )
                     else:
                         response = self.authorized_client.get(url)
-                        self.assertEqual(response.status_code, 200)
+                        self.assertEqual(response.status_code,
+                                         HTTPStatus.OK.value)
 
     def test_urls_templates(self):
         for url, template in self.templates_urls.items():
-            address = url[0].format('1')
+            address = url[0].format(self.new_post.pk)
             with self.subTest(adress=address):
                 response = self.authorized_client.get(address)
                 self.assertTemplateUsed(response, template[0])
 
     def test_404(self):
-        response = self.guest_client.get('/no_page/')
-        self.assertEqual(response.status_code, 404)
+        response = self.client.get('/no_page/')
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND.value)
