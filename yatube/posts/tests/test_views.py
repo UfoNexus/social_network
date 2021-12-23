@@ -3,6 +3,7 @@ import tempfile
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
@@ -115,6 +116,20 @@ class PostPagesTests(TestCase):
         page = list(self.templates_pages.keys())[0]
         self.paginator_page1_test(page)
         self.paginator_page2_test(page)
+
+    def test_cache(self):
+        page = list(self.templates_pages.keys())[0]
+        response = self.authorized_client.get(page)
+        content_before = response.content
+        post = Post.objects.latest('pub_date')
+        post.delete()
+        response = self.authorized_client.get(page)
+        content_now = response.content
+        self.assertEqual(content_before, content_now)
+        sleep(21)
+        response = self.authorized_client.get(page)
+        content_now = response.content
+        self.assertNotEqual(content_before, content_now)
 
     def test_group_posts(self):
         page = list(self.templates_pages.keys())[1]
