@@ -7,8 +7,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
-from ..forms import PostForm
-from ..models import Group, Post
+from ..forms import CommentForm, PostForm
+from ..models import CommentModel, Group, Post
 
 User = get_user_model()
 
@@ -139,3 +139,63 @@ class PostFormTests(TestCase):
         edited_post = Post.objects.get(pk=self.new_post.pk)
         self.assertNotEqual(edited_post.text, form_data['text'])
         self.assertNotEqual(edited_post.group, required_group)
+
+
+class CommentFormTests(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.user = User.objects.create_user(username='TestUser')
+        cls.new_post = Post.objects.create(
+            text='Тестовый пост',
+            author=cls.user
+        )
+        cls.form = CommentForm
+
+    def setUp(self):
+        self.authorized_client = Client()
+        self.authorized_client.force_login(self.user)
+
+    def test_create_comment_auth(self):
+        comments_count = self.new_post.comments.count()
+        form_data = {
+            'text': 'Тестовый текст из формы'
+        }
+        response = self.authorized_client.post(
+            reverse('posts:add_comment', kwargs={
+                'post_id': self.new_post.pk
+            }),
+            data=form_data,
+            follow=True
+        )
+        self.assertRedirects(response,
+                             reverse('posts:post_detail',
+                                     kwargs={'post_id': self.new_post.pk})
+                             )
+        comments_amount = self.new_post.comments.count()
+        new_comment = CommentModel.objects.latest(field_name='created')
+        self.assertEqual(comments_amount, comments_count + 1)
+        self.assertTrue(CommentModel.objects.filter(
+            pk=new_comment.pk
+        ).exists())
+        self.assertEqual(new_comment.post, self.new_post)
+        self.assertEqual(
+            new_comment.author.username, self.user.username
+        )
+        self.assertEqual(new_comment.text, form_data.get('text'))
+
+    def test_create_comment_guest(self):
+        comments_count = self.new_post.comments.count()
+        form_data = {
+            'text': 'Тестовый текст из формы'
+        }
+        response = self.client.post(
+            reverse('posts:add_comment', kwargs={
+                'post_id': self.new_post.pk
+            }),
+            data=form_data,
+            follow=True
+        )
+        comments_amount = self.new_post.comments.count()
+        self.assertEqual(comments_count, comments_amount)
+

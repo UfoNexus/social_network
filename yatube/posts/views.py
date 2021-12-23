@@ -3,8 +3,8 @@ from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .forms import PostForm
-from .models import Group, Post
+from .forms import CommentForm, PostForm
+from .models import CommentModel, Group, Post
 from yatube.settings import POST_PAGINATOR
 
 
@@ -48,6 +48,8 @@ def profile(request, username):
 
 def post_detail(request, post_id):
     post = get_object_or_404(Post, pk=post_id)
+    comment_form = CommentForm(request.POST or None)
+    comments = post.comments.all()
     correct_user = False
     if request.user.pk == post.author.pk:
         correct_user = True
@@ -55,7 +57,9 @@ def post_detail(request, post_id):
     context = {
         'post': post,
         'amount': posts_amount,
-        'correct_user': correct_user
+        'correct_user': correct_user,
+        'form': comment_form,
+        'comments': comments
     }
     return render(request, 'posts/post_detail.html', context)
 
@@ -92,3 +96,15 @@ def post_edit(request, post_id):
         'is_edit': True,
     }
     return render(request, 'posts/create_post.html', context)
+
+
+@login_required
+def add_comment(request, post_id):
+    post = get_object_or_404(Post, pk=post_id)
+    form = CommentForm(request.POST or None)
+    if form.is_valid():
+        comment = form.save(commit=False)
+        comment.author = request.user
+        comment.post = post
+        comment.save()
+    return redirect('posts:post_detail', post_id=post_id)

@@ -9,7 +9,7 @@ from django.urls import reverse
 from django import forms
 from time import sleep
 
-from ..models import Group, Post
+from ..models import CommentModel, Group, Post
 from yatube.settings import POST_PAGINATOR
 
 User = get_user_model()
@@ -18,7 +18,7 @@ TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
 
 @override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
-class TaskPagesTests(TestCase):
+class PostPagesTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -212,3 +212,17 @@ class TaskPagesTests(TestCase):
         )
         objects = response.context['page_obj']
         self.assertTrue(new_post in objects)
+
+    def test_comment_in_post(self):
+        post = self.new_posts.get(1)
+        page = list(self.templates_pages.keys())[3]
+        new_comment = CommentModel.objects.create(
+            text='random',
+            post=post,
+            author=self.user
+        )
+        response = self.authorized_client.get(page)
+        self.assertTrue(
+            new_comment in response.context.get('post').comments.all()
+        )
+
