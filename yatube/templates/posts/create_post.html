@@ -37,7 +37,7 @@
               {% endfor %}
             {% endif %}
 
-            <form method="post" action="
+            <form method="post" enctype="multipart/form-data" action="
               {% if is_edit %}
                 {% url 'posts:post_edit' post.pk %}
               {% else %}

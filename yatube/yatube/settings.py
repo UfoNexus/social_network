@@ -10,6 +10,7 @@ DEBUG = True
 ALLOWED_HOSTS = ['127.0.0.1', '127.0.0.2', 'localhost', 'testserver']
 
 INSTALLED_APPS = [
+    'sorl.thumbnail',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -31,6 +32,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 ROOT_URLCONF = 'yatube.urls'
 
